@@ -51,5 +51,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# Cmake
+cmake-build-debug/
+.idea/
 # debug information files
 *.dwo
