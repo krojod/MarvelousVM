@@ -4,9 +4,6 @@ project(MarvelousVM VERSION 0.1
                     DESCRIPTION "An educational JVM like VM"
                     LANGUAGES C)
 
-include_directories(src)
-
-
 file(GLOB VM_LIB_SRC "src/*" )
 add_library(vmLib STATIC ${VM_LIB_SRC})
 

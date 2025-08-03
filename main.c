@@ -4,5 +4,5 @@
 #include "src/memory.h"
 
 int main() {
-    test();
+
 }
