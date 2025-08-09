@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "memory.h"
+#include "../include/memory.h"
 
 byte* createMemory() {
     byte* memory = malloc(sizeof(byte) * DEFAULT_MEM_SIZE);
