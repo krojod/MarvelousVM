@@ -1,7 +1,8 @@
 #include "../include/instruction.h"
-
+#include "../include/register.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void executeInstruction(byte *mem_loc, uint64_t *reg, byte *memory) {
   InstructionCode instr_code = readBitAreaFromByte(*mem_loc, INSTRC_BITS, INSTRB_CNT);
@@ -34,10 +35,23 @@ void executeInstruction(byte *mem_loc, uint64_t *reg, byte *memory) {
   default:
     break;
   }
+  // increment the Programm counter by instructionLength + code byte
+  reg[PC] += (instr.instr_length + 1);
 }
 
-void opp_math(Instruction instr, uint64_t* reg, byte* memory) {
-    
+void opp_math(Instruction instr, uint64_t *reg, byte *memory) {
+  if ((1 << 8) & *(instr.instr_start)) {
+    if (instr.instr_length < REFERENCE_MINIMUM_INSTR_LEN) {
+      perror("Unexpected instruction length!\n");
+      exit(EXIT_FAILURE);
+    }
+
+  } else {
+    if (instr.instr_length < REGISTERS_MINIMUM_LEN) {
+      perror("Unexpected instruction length!\n");
+      exit(EXIT_FAILURE);
+    }
+  }
 }
 
 byte readBitAreaFromByte(const byte target_byte, const unsigned int byte_cnt, const unsigned int offset) {

@@ -7,6 +7,10 @@
 #define INSTRC_BITS 5
 #define INSTRB_CNT 3
 
+#define REFERENCE_MINIMUM_INSTR_LEN 5
+#define REFERENCE_BYTES 4
+#define REGISTERS_MINIMUM_LEN 2
+
 typedef enum{
     ADD, // Add
     MUL, // Multiply

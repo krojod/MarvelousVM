@@ -12,8 +12,10 @@ enum {
     RSP = 6,
     RBP = 7,
     RIP = 8,
-    EFLAGS = 9,
-    RREG_SIZE = 10
+    PC = 9,
+    ZERO_FLAG = 10,
+    PNFLAG = 11,
+    RREG_SIZE = 12
 };
 
 
