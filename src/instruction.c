@@ -80,6 +80,10 @@ void opp_math(Instruction instr, uint64_t *reg, byte *memory) {
     updateFlags(dest_reg, reg);
 }
 
+void opp_not(Instruction instr, uint64_t* reg, byte* memory){
+  
+}
+
 byte readBitAreaFromByte(const byte target_byte, const unsigned int byte_cnt, const unsigned int offset) {
     if ((byte_cnt + offset) > BYTE_SIZE) {
         perror("Out of byte range\n");

@@ -41,6 +41,8 @@ void executeInstruction(byte* mem_loc, uint64_t* reg, byte* memory);
 void updateFlags(byte reg_id, uint64_t* reg);
 // operations
 
-/// @brief All math operations take this path
+/// @brief All 2 parameter math operations e.g. A + B take this path
 void opp_math(Instruction instr, uint64_t* reg, byte* memory);
+/// @brief Not operation
+void opp_not(Instruction instr, uint64_t* reg, byte* memory);
 #endif
