@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "instruction.h"
 
 Instruction readInstructionFromMemory(byte *mem_loc)
 {
@@ -21,14 +22,9 @@ void executeInstruction(byte *mem_loc, uint64_t *reg, byte *memory) {
   case SUB:
   case DIV:
   case AND:
-  case OR:
-   {
-    opp_math(instr, reg, memory);
-    break;
-  }
-  case NOT:break;
-  case CMP:
-    break;
+  case OR:  opp_math(instr, reg, memory); break;
+  case NOT: opp_not(instr, reg, memory); break;
+  case CMP: opp_cmp(instr, reg, memory); break;
   case B:
     break;
   case LDR:
@@ -50,28 +46,7 @@ void executeInstruction(byte *mem_loc, uint64_t *reg, byte *memory) {
 
 void opp_math(Instruction instr, uint64_t *reg, byte *memory) {
   byte dest_reg = readBitAreaFromByte(*instr.instr_start, REGISTER_REF_SIZE, 0);
-  uint64_t operand;
-  // first bit is set to 1, second parameter is loaded from memory
-  if ((1 << 7) & *(instr.instr_start)) {
-    if (instr.instr_length != REFERENCE_INSTR_LEN) {
-      perror("Unexpected instruction length!\n");
-      free(memory);
-      exit(EXIT_FAILURE);
-    }
-    // add 1 as 3 bits can represent 0...7 as 0 i s not possible 1...8 can be represented
-    byte dataLength =  readBitAreaFromByte(*instr.instr_start, DLENGTH_IDENTIFIER_BITS, REGISTER_REF_SIZE) + 1;
-    uint64_t offset = readNBytesOfMemory(sizeof(uint64_t), instr.instr_start + DEST_REG_LENGTH);
-    operand = readNBytesOfMemory(dataLength, &memory[reg[PC] + offset]);
-  } 
-  // first bit is set to 0, second parameter is loaded from registry
-  else {
-    if (instr.instr_length != REGISTERS_INSTR_LEN) {
-      perror("Unexpected instruction length!\n");
-      free(memory);
-      exit(EXIT_FAILURE);
-    }
-    operand = reg[readBitAreaFromByte(*instr.instr_start + 1, REGISTER_REF_SIZE, 0)];
-  }
+  uint64_t operand = getOperandFromInstruction(instr, reg, memory);
   switch (instr.instr_code) {
     case ADD: reg[dest_reg] = reg[dest_reg] + operand; break;
     case SUB: reg[dest_reg] = reg[dest_reg] - operand; break;
@@ -99,17 +74,36 @@ void opp_not(Instruction instr, uint64_t* reg, byte* memory){
   updateFlags(dest_reg, reg);
 }
 
-byte readBitAreaFromByte(const byte target_byte, const unsigned int byte_cnt, const unsigned int offset) {
-    if ((byte_cnt + offset) > BYTE_SIZE) {
-        perror("Out of byte range\n");
-        return 0;
-    }
-    const byte bit_mask = (1 << (byte_cnt)) - 1;
-    return (target_byte >> offset) & bit_mask;
+void opp_cmp(Instruction instr, uint64_t *reg, byte *memory)
+{
+  byte dest_reg = readBitAreaFromByte(*instr.instr_start, REGISTER_REF_SIZE, 0);
+  uint64_t operand = getOperandFromInstruction(instr, reg, memory);
+  if(reg[dest_reg] < operand){
+    reg[FLAGS] = NFLAG;
+  }
+  else if(reg[dest_reg] > operand)
+  {
+    reg[FLAGS] = PFLAG;
+  }
+  else{
+    reg[FLAGS] = ZFLAG;
+  }
+}
+
+byte readBitAreaFromByte(const byte target_byte, const unsigned int byte_cnt, const unsigned int offset)
+{
+  if ((byte_cnt + offset) > BYTE_SIZE)
+  {
+    perror("Out of byte range\n");
+    return 0;
+  }
+  const byte bit_mask = (1 << (byte_cnt)) - 1;
+  return (target_byte >> offset) & bit_mask;
 }
 
 void updateFlags(byte reg_id, uint64_t *reg)
 {
+  reg[FLAGS] = 0;
   if((long)reg[reg_id] < 0)
   {
     reg[FLAGS] = NFLAG;
@@ -120,4 +114,31 @@ void updateFlags(byte reg_id, uint64_t *reg)
   else {
     reg[FLAGS] = ZFLAG;
   }
+}
+
+uint64_t getOperandFromInstruction(Instruction instr, uint64_t *reg, byte *memory)
+{
+  uint64_t operand;
+  // first bit is set to 1, second parameter is loaded from memory
+  if ((1 << 7) & *(instr.instr_start)) {
+    if (instr.instr_length != REFERENCE_INSTR_LEN) {
+      perror("Unexpected instruction length!\n");
+      free(memory);
+      exit(EXIT_FAILURE);
+    }
+    // add 1 as 3 bits can represent 0...7 as 0 i s not possible 1...8 can be represented
+    byte dataLength =  readBitAreaFromByte(*instr.instr_start, DLENGTH_IDENTIFIER_BITS, REGISTER_REF_SIZE) + 1;
+    uint64_t offset = readNBytesOfMemory(sizeof(uint64_t), instr.instr_start + DEST_REG_LENGTH);
+    operand = readNBytesOfMemory(dataLength, &memory[reg[PC] + offset]);
+  } 
+  // first bit is set to 0, second parameter is loaded from registry
+  else {
+    if (instr.instr_length != REGISTERS_INSTR_LEN) {
+      perror("Unexpected instruction length!\n");
+      free(memory);
+      exit(EXIT_FAILURE);
+    }
+    operand = reg[readBitAreaFromByte(*instr.instr_start + 1, REGISTER_REF_SIZE, 0)];
+  }
+  return operand;
 }

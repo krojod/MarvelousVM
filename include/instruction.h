@@ -41,10 +41,13 @@ byte readBitAreaFromByte(byte target_byte, unsigned int byte_cnt, unsigned int o
 Instruction readInstructionFromMemory(byte* mem_loc);
 void executeInstruction(byte* mem_loc, uint64_t* reg, byte* memory);
 void updateFlags(byte reg_id, uint64_t* reg);
+uint64_t getOperandFromInstruction(Instruction instr, uint64_t* reg, byte* memory);
 // operations
 
 /// @brief All 2 parameter math operations e.g. A + B take this path
 void opp_math(Instruction instr, uint64_t* reg, byte* memory);
 /// @brief Not operation
 void opp_not(Instruction instr, uint64_t* reg, byte* memory);
+/// @brief Enables comparing 2 parameeters, sets the comparison register flags 
+void opp_cmp(Instruction instr, uint64_t* reg, byte* memory);
 #endif
