@@ -17,7 +17,7 @@ uint64_t readNBytesOfMemory(int n, const byte* mem_loc){
     uint64_t memoryBlock = 0;
     for(int i = n - 1; i >= 0; i--)
     {
-        memoryBlock = (memoryBlock | mem_loc[i]) << (sizeof(byte)* i);
+        memoryBlock = memoryBlock +  (mem_loc[i] << (sizeof(byte)* (n - (i + 1))));
     }
     return memoryBlock;
 }

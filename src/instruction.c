@@ -5,12 +5,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void executeInstruction(byte *mem_loc, uint64_t *reg, byte *memory) {
+Instruction readInstructionFromMemory(byte *mem_loc)
+{
   InstructionCode instr_code =
       readBitAreaFromByte(*mem_loc, INSTRC_BITS, INSTRB_CNT);
-  Instruction instr = {
-      mem_loc + 1, readBitAreaFromByte(*mem_loc, INSTRB_CNT, 0), instr_code};
-  switch (instr_code) {
+  Instruction instr = {mem_loc + 1, readBitAreaFromByte(*mem_loc, INSTRB_CNT, 0), instr_code};
+  return instr;
+}
+
+void executeInstruction(byte *mem_loc, uint64_t *reg, byte *memory) {
+  Instruction instr = readInstructionFromMemory(mem_loc);
+  switch (instr.instr_code) {
   case ADD:
   case MUL:
   case SUB:
@@ -46,8 +51,9 @@ void executeInstruction(byte *mem_loc, uint64_t *reg, byte *memory) {
 void opp_math(Instruction instr, uint64_t *reg, byte *memory) {
   byte dest_reg = readBitAreaFromByte(*instr.instr_start, REGISTER_REF_SIZE, 0);
   uint64_t operand;
-  if ((1 << 8) & *(instr.instr_start)) {
-    if (instr.instr_length != REFERENCE_MINIMUM_INSTR_LEN) {
+  // first bit is set to 1, second parameter is loaded from memory
+  if ((1 << 7) & *(instr.instr_start)) {
+    if (instr.instr_length != REFERENCE_INSTR_LEN) {
       perror("Unexpected instruction length!\n");
       free(memory);
       exit(EXIT_FAILURE);
@@ -56,13 +62,15 @@ void opp_math(Instruction instr, uint64_t *reg, byte *memory) {
     byte dataLength =  readBitAreaFromByte(*instr.instr_start, DLENGTH_IDENTIFIER_BITS, REGISTER_REF_SIZE) + 1;
     uint64_t offset = readNBytesOfMemory(sizeof(uint64_t), instr.instr_start + DEST_REG_LENGTH);
     operand = readNBytesOfMemory(dataLength, &memory[reg[PC] + offset]);
-  } else {
-    if (instr.instr_length != REGISTERS_MINIMUM_LEN) {
+  } 
+  // first bit is set to 0, second parameter is loaded from registry
+  else {
+    if (instr.instr_length != REGISTERS_INSTR_LEN) {
       perror("Unexpected instruction length!\n");
       free(memory);
       exit(EXIT_FAILURE);
     }
-    operand = readBitAreaFromByte(*instr.instr_start + 1, REGISTER_REF_SIZE, 0);
+    operand = reg[readBitAreaFromByte(*instr.instr_start + 1, REGISTER_REF_SIZE, 0)];
   }
   switch (instr.instr_code) {
     case ADD: reg[dest_reg] = reg[dest_reg] + operand; break;
@@ -81,7 +89,14 @@ void opp_math(Instruction instr, uint64_t *reg, byte *memory) {
 }
 
 void opp_not(Instruction instr, uint64_t* reg, byte* memory){
-  
+  byte dest_reg = readBitAreaFromByte(*instr.instr_start, REGISTER_REF_SIZE, 0);
+  if(instr.instr_length != NOT_INSTR_LEN){
+    perror("Unexpected instruction length!\n");
+    free(memory);
+    exit(EXIT_FAILURE);
+  }
+  reg[dest_reg] = ~reg[dest_reg];
+  updateFlags(dest_reg, reg);
 }
 
 byte readBitAreaFromByte(const byte target_byte, const unsigned int byte_cnt, const unsigned int offset) {
@@ -89,11 +104,11 @@ byte readBitAreaFromByte(const byte target_byte, const unsigned int byte_cnt, co
         perror("Out of byte range\n");
         return 0;
     }
-    const byte bit_mask = (1 << (byte_cnt + 1)) - 1;
+    const byte bit_mask = (1 << (byte_cnt)) - 1;
     return (target_byte >> offset) & bit_mask;
 }
 
-void updateFlags(byte reg_id, uint64_t* reg)
+void updateFlags(byte reg_id, uint64_t *reg)
 {
   if((long)reg[reg_id] < 0)
   {

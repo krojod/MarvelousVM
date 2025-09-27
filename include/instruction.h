@@ -4,12 +4,13 @@
 #include <stdint.h>
 
 #define BYTE_SIZE 8
-#define INSTRC_BITS 5
-#define INSTRB_CNT 3
+#define INSTRC_BITS 4
+#define INSTRB_CNT 4
 
-#define REFERENCE_MINIMUM_INSTR_LEN 5
+#define REFERENCE_INSTR_LEN 9
+#define NOT_INSTR_LEN 1
 #define REFERENCE_BYTES 4
-#define REGISTERS_MINIMUM_LEN 2
+#define REGISTERS_INSTR_LEN 2
 #define DEST_REG_LENGTH 1
 #define DLENGTH_IDENTIFIER_BITS 3
 
@@ -37,6 +38,7 @@ typedef struct{
 } Instruction;
 
 byte readBitAreaFromByte(byte target_byte, unsigned int byte_cnt, unsigned int offset);
+Instruction readInstructionFromMemory(byte* mem_loc);
 void executeInstruction(byte* mem_loc, uint64_t* reg, byte* memory);
 void updateFlags(byte reg_id, uint64_t* reg);
 // operations

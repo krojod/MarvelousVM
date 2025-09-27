@@ -25,8 +25,9 @@ CPPFLAGS := $(INC_FLAGS) -MMD -MP -Wall
 
 CUNITFLAG := -lcunit
 
-test: $(TESTS_OBJS) $(TESTSOURCE_OBJS)
+test: clean $(TESTS_OBJS) $(TESTSOURCE_OBJS)
 	$(CC) $(TESTS_OBJS) $(TESTSOURCE_OBJS) -o $(BUILD_DIR)/$(TEST_EXEC) $(LDFLAGS) $(CUNITFLAG)
+	$(BUILD_DIR)/$(TEST_EXEC)
 
 $(TARGET_EXEC) : $(OBJS)
 	$(CC) $(OBJS) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
@@ -37,4 +38,4 @@ $(BUILD_DIR)/%.c.o: %.c
 
 .PHONY: clean
 clean:
-	rm -r $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)
