@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "instruction.h"
 
 Instruction readInstructionFromMemory(byte *mem_loc)
 {
@@ -25,8 +24,7 @@ void executeInstruction(byte *mem_loc, uint64_t *reg, byte *memory) {
   case OR:  opp_math(instr, reg, memory); break;
   case NOT: opp_not(instr, reg, memory); break;
   case CMP: opp_cmp(instr, reg, memory); break;
-  case B:
-    break;
+  case B:   opp_b(instr, reg, memory); break;
   case LDR:
     break;
   case MOV:
@@ -78,6 +76,7 @@ void opp_cmp(Instruction instr, uint64_t *reg, byte *memory)
 {
   byte dest_reg = readBitAreaFromByte(*instr.instr_start, REGISTER_REF_SIZE, 0);
   uint64_t operand = getOperandFromInstruction(instr, reg, memory);
+  reg[FLAGS] = 0;
   if(reg[dest_reg] < operand){
     reg[FLAGS] = NFLAG;
   }
@@ -90,14 +89,29 @@ void opp_cmp(Instruction instr, uint64_t *reg, byte *memory)
   }
 }
 
-byte readBitAreaFromByte(const byte target_byte, const unsigned int byte_cnt, const unsigned int offset)
+void opp_b(Instruction instr, uint64_t *reg, byte *memory)
 {
-  if ((byte_cnt + offset) > BYTE_SIZE)
+  if (instr.instr_length != REFERENCE_INSTR_LEN)
+  {
+    perror("Unexpected instruction length!\n");
+    free(memory);
+    exit(EXIT_FAILURE);
+  }
+  byte bit_mask = readBitAreaFromByte(instr.instr_start, B_MASK_SIZE, 0);
+  if(bit_mask & reg[FLAGS]){
+    uint64_t offset = readNBytesOfMemory(sizeof(uint64_t), instr.instr_start + META_DATA_BYTES);
+    reg[PC] += offset;
+  }
+}
+
+byte readBitAreaFromByte(const byte target_byte, const unsigned int bit_cnt, const unsigned int offset)
+{
+  if ((bit_cnt + offset) > BYTE_SIZE)
   {
     perror("Out of byte range\n");
     return 0;
   }
-  const byte bit_mask = (1 << (byte_cnt)) - 1;
+  const byte bit_mask = (1 << (bit_cnt)) - 1;
   return (target_byte >> offset) & bit_mask;
 }
 
@@ -128,7 +142,7 @@ uint64_t getOperandFromInstruction(Instruction instr, uint64_t *reg, byte *memor
     }
     // add 1 as 3 bits can represent 0...7 as 0 i s not possible 1...8 can be represented
     byte dataLength =  readBitAreaFromByte(*instr.instr_start, DLENGTH_IDENTIFIER_BITS, REGISTER_REF_SIZE) + 1;
-    uint64_t offset = readNBytesOfMemory(sizeof(uint64_t), instr.instr_start + DEST_REG_LENGTH);
+    uint64_t offset = readNBytesOfMemory(sizeof(uint64_t), instr.instr_start + META_DATA_BYTES);
     operand = readNBytesOfMemory(dataLength, &memory[reg[PC] + offset]);
   } 
   // first bit is set to 0, second parameter is loaded from registry

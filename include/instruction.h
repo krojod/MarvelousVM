@@ -11,8 +11,9 @@
 #define NOT_INSTR_LEN 1
 #define REFERENCE_BYTES 4
 #define REGISTERS_INSTR_LEN 2
-#define DEST_REG_LENGTH 1
+#define META_DATA_BYTES 1
 #define DLENGTH_IDENTIFIER_BITS 3
+#define B_MASK_SIZE 3
 
 typedef enum{
     ADD, // Add
@@ -24,6 +25,7 @@ typedef enum{
     NOT, // NOT
     CMP, // Compare
     B, // Branch
+    JMP, // Jump
     LDR, // Load Register
     MOV, // Move Register
     STR, // Store in Memory
@@ -37,7 +39,7 @@ typedef struct{
     InstructionCode instr_code;
 } Instruction;
 
-byte readBitAreaFromByte(byte target_byte, unsigned int byte_cnt, unsigned int offset);
+byte readBitAreaFromByte(byte target_byte, unsigned int bit_cnt, unsigned int offset);
 Instruction readInstructionFromMemory(byte* mem_loc);
 void executeInstruction(byte* mem_loc, uint64_t* reg, byte* memory);
 void updateFlags(byte reg_id, uint64_t* reg);
@@ -50,4 +52,6 @@ void opp_math(Instruction instr, uint64_t* reg, byte* memory);
 void opp_not(Instruction instr, uint64_t* reg, byte* memory);
 /// @brief Enables comparing 2 parameeters, sets the comparison register flags 
 void opp_cmp(Instruction instr, uint64_t* reg, byte* memory);
+/// @brief branch instruction based on the last cpuflags 
+void opp_b(Instruction instr, uint64_t* reg, byte* memory);
 #endif

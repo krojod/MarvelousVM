@@ -40,13 +40,31 @@ void test_opp_not(){
   CU_ASSERT_EQUAL(-6, reg[RAX]);
 }
 
+void test_opp_cmp(){
+  /// references
+  uint64_t reg[RREG_SIZE] = {0};
+  reg[RAX] = 5;
+  byte memory_cmp_ref[] = { (CMP << INSTRB_CNT) + REFERENCE_INSTR_LEN, (1 << 7) + (3 << REGISTER_REF_SIZE) + RAX, 0,0,0,0,0,0,0,10, 0,0,0,25};
+  Instruction instr = readInstructionFromMemory(memory_cmp_ref);
+  opp_cmp(instr, reg, memory_cmp_ref);
+  CU_ASSERT_EQUAL(NFLAG, reg[FLAGS]);
+  /// registers 
+  reg[RAX] = 5;
+  reg[RBX] = 5;
+  byte memory_cmp_reg[] = { (ADD << INSTRB_CNT) + REGISTERS_INSTR_LEN, RAX, RBX};
+  instr = readInstructionFromMemory(memory_cmp_reg);
+  opp_cmp(instr, reg, NULL);
+  CU_ASSERT_EQUAL(ZFLAG, reg[FLAGS]);
+}
+
 
 int main(){
   CU_initialize_registry();
   CU_pSuite suite = CU_add_suite("InstructionTestSuite", 0, 0);
   CU_add_test(suite, "test instruction reading", test_read_instr);
   CU_add_test(suite, "test math operations", test_opp_math);
-  CU_add_test(suite, "test not operations", test_opp_not);
+  CU_add_test(suite, "test not operation", test_opp_not);
+  CU_add_test(suite, "test cmp operation", test_opp_cmp);
   CU_basic_run_tests();
   CU_cleanup_registry();
 
