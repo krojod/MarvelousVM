@@ -7,6 +7,7 @@
 #define INSTRC_BITS 4
 #define INSTRB_CNT 4
 
+#define REFERENCE_LEN 8
 #define REFERENCE_INSTR_LEN 9
 #define NOT_INSTR_LEN 1
 #define REFERENCE_BYTES 4
@@ -30,7 +31,6 @@ typedef enum{
     MOV, // Move Register
     STR, // Store in Memory
     SWI, // OS call
-    SWP, // SWAP register with memory
 } InstructionCode;
 
 typedef struct{
@@ -54,4 +54,8 @@ void opp_not(Instruction instr, uint64_t* reg, byte* memory);
 void opp_cmp(Instruction instr, uint64_t* reg, byte* memory);
 /// @brief branch instruction based on the last cpuflags 
 void opp_b(Instruction instr, uint64_t* reg, byte* memory);
+/// @brief Jump instruciton
+void opp_jmp(Instruction instr, uint64_t* reg, byte* memory);
+/// @brief load memory into the register
+void opp_ldr(Instruction instr, uint64_t* reg, byte* memory);
 #endif

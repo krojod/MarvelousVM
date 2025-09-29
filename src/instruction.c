@@ -25,18 +25,18 @@ void executeInstruction(byte *mem_loc, uint64_t *reg, byte *memory) {
   case NOT: opp_not(instr, reg, memory); break;
   case CMP: opp_cmp(instr, reg, memory); break;
   case B:   opp_b(instr, reg, memory); break;
-  case LDR:
-    break;
+  case JMP: opp_jmp(instr, reg, memory); break;
+  case LDR: opp_ldr(instr, reg, memory); break;
   case MOV:
     break;
   case STR:
     break;
   case SWI:
     break;
-  case SWP:
-    break;
   default:
-    break;
+    perror("Unexpected instruction");
+    free(memory);
+    exit(EXIT_FAILURE);
   }
   // increment the Programm counter by instructionLength + code byte
   reg[PC] += (instr.instr_length + 1);
@@ -104,6 +104,21 @@ void opp_b(Instruction instr, uint64_t *reg, byte *memory)
   }
 }
 
+void opp_jmp(Instruction instr, uint64_t *reg, byte *memory)
+{
+  if (instr.instr_length != REFERENCE_LEN)
+  {
+    perror("Unexpected instruction length!\n");
+    free(memory);
+    exit(EXIT_FAILURE);
+  }
+  uint64_t offset = readNBytesOfMemory(sizeof(uint64_t), instr.instr_start + META_DATA_BYTES);
+  reg[PC] += offset;
+}
+
+void opp_ldr(Instruction instr, uint64_t *reg, byte *memory)
+{
+}
 byte readBitAreaFromByte(const byte target_byte, const unsigned int bit_cnt, const unsigned int offset)
 {
   if ((bit_cnt + offset) > BYTE_SIZE)
